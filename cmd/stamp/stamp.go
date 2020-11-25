@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	formatFlag  = flag.String("f", "small", "")
+	formatFlag  = flag.String("f", "medium", "")
 	bracketFlag = flag.Bool("b", false, "")
 
 	styles = map[string]func(time.Time) string{
