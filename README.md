@@ -4,6 +4,8 @@ Go experiments.
 
 ## github.com/clfs/x/cmd/stamp
 
+Apply timestamps to piped text.
+
 ```text
 Usage:
     ... | stamp [-f FORMAT] [-b]
@@ -14,13 +16,13 @@ Options:
     -h          Show this help message.
 
 Formats:
-    small       10:33am
-    medium      10:33:36.042
-    large       2020-11-25T10:33:55.740453-08:00
+    small       1:00pm
+    medium      13:00:00.000
+    large       2020-11-25T13:00:00.000000000-08:00
     unix        1606329242
 
 Example:
     $ tail -f important.log | stamp -f small -b
-    [10:26am] An event.
-    [10:35am] Another event, sometime later.
+    [3:26am] An event.
+    [3:35am] Another event, sometime later.
 ```
