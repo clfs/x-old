@@ -17,7 +17,7 @@ var (
 	styles = map[string]func(time.Time) string{
 		"small":  func(t time.Time) string { return t.Format("3:04pm") },
 		"medium": func(t time.Time) string { return t.Format("15:04:05.000") },
-		"large":  func(t time.Time) string { return t.Format("2006-01-02T15:04:05.999999999Z07:00") },
+		"large":  func(t time.Time) string { return t.Format("2006-01-02T15:04:05.000000000Z07:00") },
 		"unix":   func(t time.Time) string { return strconv.FormatInt(t.Unix(), 10) },
 	}
 )
@@ -31,15 +31,15 @@ Options:
     -h          Show this help message.
 
 Formats:
-    small       10:33am
-    medium      10:33:36.042
-    large       2020-11-25T10:33:55.740453-08:00
+    small       1:00pm
+    medium      13:00:00.000
+    large       2020-11-25T13:00:00.000000000-08:00
     unix        1606329242
 
 Example:
     $ tail -f important.log | stamp -f small -b
-    [10:26am] An event.
-    [10:35am] Another event, sometime later.`
+    [3:26am] An event.
+    [3:35am] Another event, sometime later.`
 
 func main() {
 	flag.Usage = func() { fmt.Fprintln(os.Stderr, usage) }
