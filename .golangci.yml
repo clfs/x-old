@@ -1,0 +1,47 @@
+output:
+  sort-results: true
+  uniq-by-line: false
+linters:
+  enable-all: true
+  disable:
+    - exhaustivestruct
+    - forbidigo
+    - golint # deprecated
+    - interfacer # deprecated
+    - maligned # deprecated
+    - nlreturn
+    - scopelint # deprecated
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+  govet:
+    enable-all: true
+  makezero:
+    always: true
+  nolintlint:
+    allow-unused: false
+  staticcheck:
+    go: "1.16"
+    checks:
+      - all
+  stylecheck:
+    go: "1.16"
+    checks:
+      - all
+  unused:
+    go: "1.16"
+  wsl:
+    allow-assign-and-call: false
+    allow-multiline-assign: false
+    force-err-cuddling: true
+    force-short-decl-cuddling: true
