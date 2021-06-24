@@ -51,6 +51,7 @@ func main() {
 	}
 
 	style, ok := styles[*formatFlag]
+
 	if !ok {
 		fmt.Fprintln(os.Stderr, "unknown time format:", *formatFlag)
 		os.Exit(1)
@@ -63,9 +64,9 @@ func main() {
 		// Note that ReadString has no read limit, so very long lines
 		// will probably cause memory problems.
 		switch line, err := r.ReadString('\n'); err {
-
 		case nil:
 			s := fmt.Sprintf(lineFormat, style(time.Now()), line)
+
 			if _, err = out.WriteString(s); err != nil {
 				fmt.Fprintln(os.Stderr, "stdout write failed:", err)
 				os.Exit(1)

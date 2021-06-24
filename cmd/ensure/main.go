@@ -30,25 +30,32 @@ Options:
 
 func main() {
 	log.SetFlags(0)
+
 	var (
 		helpFlag  = flag.Bool("help", false, "")
 		listFlag  = flag.Bool("list", false, "")
 		quietFlag = flag.Bool("quiet", false, "")
 	)
+
 	flag.Usage = func() {
 		fmt.Fprint(flag.CommandLine.Output(), usage)
 	}
+
 	flag.Parse()
+
 	if *quietFlag {
 		log.SetOutput(ioutil.Discard)
 	}
+
 	if *helpFlag || (!*listFlag && flag.NArg() == 0) {
 		fmt.Fprint(flag.CommandLine.Output(), usage)
 		return
 	}
+
 	if !*listFlag && flag.NArg() != 2 {
 		log.Fatalln("ERROR: must provide algorithm and digest")
 	}
+
 	(&ensure{listMode: *listFlag}).Run(flag.Args())
 }
 
@@ -71,20 +78,26 @@ func (e *ensure) Run(args []string) {
 	}
 	e.algorithm = args[0]
 	e.digest = args[1]
+
 	h, ok := algorithms[e.algorithm]
 	if !ok {
 		log.Fatalf("ERROR: %s is not a supported algorithm", e.algorithm)
 	}
-	r := bufio.NewReader(os.Stdin)
-	var saved bytes.Buffer
+
+	var (
+		r     = bufio.NewReader(os.Stdin)
+		saved bytes.Buffer
+	)
+
 	tee := io.TeeReader(r, &saved)
 	if _, err := io.Copy(h, tee); err != nil {
 		log.Fatal(err)
 	}
-	res := hex.EncodeToString(h.Sum(nil))
-	if res != e.digest {
+
+	if res := hex.EncodeToString(h.Sum(nil)); res != e.digest {
 		log.Fatalf("ERROR: expected %s, got %s", res, e.digest)
 	}
+
 	fmt.Printf("%s", saved.String())
 }
 
@@ -93,7 +106,9 @@ func (e *ensure) list() {
 	for k := range algorithms {
 		keys = append(keys, k)
 	}
+
 	sort.Strings(keys)
+
 	for _, k := range keys {
 		fmt.Println(k)
 	}

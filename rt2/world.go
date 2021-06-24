@@ -3,9 +3,9 @@ package rt2
 import "image/color"
 
 type World struct {
-	Color  color.RGBA
 	Lights []Light
 	Shapes []Shape
+	Color  color.RGBA
 }
 
 func NewWorld(c color.RGBA) World {
@@ -26,5 +26,6 @@ func (w *World) At(v Vec) color.RGBA {
 			return color.RGBA{255, 255, 255, 255}
 		}
 	}
+
 	return w.Color
 }

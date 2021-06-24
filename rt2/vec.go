@@ -15,6 +15,7 @@ func NewVec(x, y float64) Vec {
 func (v *Vec) Add(a, b *Vec) *Vec {
 	v.X = a.X + b.X
 	v.Y = a.Y + b.Y
+
 	return v
 }
 
@@ -22,6 +23,7 @@ func (v *Vec) Add(a, b *Vec) *Vec {
 func (v *Vec) Sub(a, b *Vec) *Vec {
 	v.X = a.X - b.X
 	v.Y = a.Y - b.Y
+
 	return v
 }
 
@@ -29,6 +31,7 @@ func (v *Vec) Sub(a, b *Vec) *Vec {
 func (v *Vec) Mul(a *Vec, f float64) *Vec {
 	v.X = a.X * f
 	v.Y = a.Y * f
+
 	return v
 }
 
@@ -36,6 +39,7 @@ func (v *Vec) Mul(a *Vec, f float64) *Vec {
 func (v *Vec) Div(a *Vec, f float64) *Vec {
 	v.X = a.X / f
 	v.Y = a.Y / f
+
 	return v
 }
 
@@ -43,6 +47,7 @@ func (v *Vec) Div(a *Vec, f float64) *Vec {
 func (v *Vec) Neg(a *Vec) *Vec {
 	v.X = -a.X
 	v.Y = -a.Y
+
 	return v
 }
 

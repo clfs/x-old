@@ -44,4 +44,3 @@ linters-settings:
     allow-assign-and-call: false
     allow-multiline-assign: false
     force-err-cuddling: true
-    force-short-decl-cuddling: true
