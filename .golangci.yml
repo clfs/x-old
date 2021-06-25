@@ -6,6 +6,7 @@ linters:
   disable:
     - exhaustivestruct
     - forbidigo
+    - gci # broken
     - golint # deprecated
     - interfacer # deprecated
     - maligned # deprecated

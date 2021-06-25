@@ -3,113 +3,126 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"crypto/md5"
-	"crypto/sha1"
+	"crypto/md5"  //nolint:gosec // Third-party digest choice is beyond my control.
+	"crypto/sha1" //nolint:gosec // Third-party digest choice is beyond my control.
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/hex"
 	"flag"
 	"fmt"
 	"hash"
+	"hash/crc32"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
-	"sort"
 )
-
-const usage = `Usage:
-	$ ... | ensure md5 1a79a4d60de6718e8e5b326e338ae533 | ...
-	Check the hash, then pass standard input to standard output.
-Options:
-	-list	List all supported algorithms.
-	-help	Print this help message.
-	-quiet	Suppress error messages.
-
-`
 
 func main() {
 	log.SetFlags(0)
 
 	var (
-		helpFlag  = flag.Bool("help", false, "")
-		listFlag  = flag.Bool("list", false, "")
-		quietFlag = flag.Bool("quiet", false, "")
+		listFlag               bool
+		algorithmFlag, sumFlag string
 	)
 
-	flag.Usage = func() {
-		fmt.Fprint(flag.CommandLine.Output(), usage)
-	}
-
+	flag.BoolVar(&listFlag, "l", false, "list available algorithms")
+	flag.BoolVar(&listFlag, "list", false, "list available algorithms")
+	flag.StringVar(&algorithmFlag, "a", "", "the algorithm to use")
+	flag.StringVar(&algorithmFlag, "algorithm", "", "the algorithm to use")
+	flag.StringVar(&sumFlag, "s", "", "the expected sum, in hex")
+	flag.StringVar(&sumFlag, "sum", "", "the expected sum, in hex")
 	flag.Parse()
 
-	if *quietFlag {
-		log.SetOutput(ioutil.Discard)
-	}
-
-	if *helpFlag || (!*listFlag && flag.NArg() == 0) {
-		fmt.Fprint(flag.CommandLine.Output(), usage)
+	if listFlag {
+		log.Printf("Supported algorithms:\n\tcrc32, crc32c, md5, sha1, sha256, sha512")
 		return
 	}
 
-	if !*listFlag && flag.NArg() != 2 {
-		log.Fatalln("ERROR: must provide algorithm and digest")
+	if algorithmFlag == "" || sumFlag == "" {
+		flag.Usage()
+		return
 	}
 
-	(&ensure{listMode: *listFlag}).Run(flag.Args())
-}
+	expectedSum, err := hex.DecodeString(sumFlag)
+	if err != nil {
+		log.Fatalf("invalid sum: %v", err)
+		return
+	}
 
-var algorithms = map[string]hash.Hash{
-	"md5":    md5.New(),
-	"sha1":   sha1.New(),
-	"sha256": sha256.New(),
-	"sha512": sha512.New(),
+	e := ensure{
+		algorithm:   algorithmFlag,
+		expectedSum: expectedSum,
+	}
+
+	if err := e.Run(); err != nil {
+		log.Fatalln(err)
+	}
 }
 
 type ensure struct {
-	listMode          bool
-	algorithm, digest string
+	algorithm   string
+	expectedSum []byte
 }
 
-func (e *ensure) Run(args []string) {
-	if e.listMode {
-		e.list()
-		return
-	}
-	e.algorithm = args[0]
-	e.digest = args[1]
-
-	h, ok := algorithms[e.algorithm]
-	if !ok {
-		log.Fatalf("ERROR: %s is not a supported algorithm", e.algorithm)
-	}
-
+func (e *ensure) Run() error {
 	var (
-		r     = bufio.NewReader(os.Stdin)
-		saved bytes.Buffer
+		h hash.Hash
+		r = bufio.NewReader(os.Stdin)
+		b bytes.Buffer
 	)
 
-	tee := io.TeeReader(r, &saved)
-	if _, err := io.Copy(h, tee); err != nil {
-		log.Fatal(err)
+	switch e.algorithm {
+	case "crc32":
+		h = crc32.New(crc32.IEEETable)
+	case "crc32c":
+		h = crc32.New(crc32.MakeTable(crc32.Castagnoli))
+	case "md5":
+		h = md5.New() //nolint:gosec // Third-party digest choice is beyond my control.
+	case "sha1":
+		h = sha1.New() //nolint:gosec // Third-party digest choice is beyond my control.
+	case "sha256":
+		h = sha256.New()
+	case "sha512":
+		h = sha512.New()
+	default:
+		return &invalidAlgorithmError{algorithm: e.algorithm}
 	}
 
-	if res := hex.EncodeToString(h.Sum(nil)); res != e.digest {
-		log.Fatalf("ERROR: expected %s, got %s", res, e.digest)
+	tee := io.TeeReader(r, &b)
+	if n, err := io.Copy(h, tee); err != nil {
+		return &failedCopyError{byteCount: n}
 	}
 
-	fmt.Printf("%s", saved.String())
+	computedSum := h.Sum(nil)
+	if !bytes.Equal(e.expectedSum, computedSum) {
+		return &mismatchedSumError{expected: e.expectedSum, computed: computedSum}
+	}
+
+	fmt.Printf("%s", b.String())
+
+	return nil
 }
 
-func (e *ensure) list() {
-	keys := make([]string, 0, len(algorithms))
-	for k := range algorithms {
-		keys = append(keys, k)
-	}
+type invalidAlgorithmError struct {
+	algorithm string
+}
 
-	sort.Strings(keys)
+func (e *invalidAlgorithmError) Error() string {
+	return fmt.Sprintf("invalid algorithm: %s", e.algorithm)
+}
 
-	for _, k := range keys {
-		fmt.Println(k)
-	}
+type failedCopyError struct {
+	byteCount int64
+}
+
+func (e *failedCopyError) Error() string {
+	return fmt.Sprintf("failed to copy all input: %d bytes copied", e.byteCount)
+}
+
+type mismatchedSumError struct {
+	expected, computed []byte
+}
+
+func (e *mismatchedSumError) Error() string {
+	return fmt.Sprintf("wrong sum: expected %x, computed %x", e.expected, e.computed)
 }
