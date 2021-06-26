@@ -21,7 +21,7 @@ func main() {
 	var (
 		listFlag = flag.Bool("list", false, "list supported algorithms")
 		algFlag  = flag.String("alg", "", "algorithm to check with")
-		sumFlag  = flag.String("sum", "", "required sum, in hex")
+		sumFlag  = flag.String("sum", "", "required sum in hex")
 	)
 
 	if *listFlag {
