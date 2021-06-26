@@ -4,6 +4,7 @@ output:
 linters:
   enable-all: true
   disable:
+    - cyclop
     - exhaustivestruct
     - forbidigo
     - gci # broken
