@@ -2,27 +2,19 @@
 
 Go experiments.
 
-## github.com/clfs/x/cmd/stamp
+## Binaries
 
-Apply timestamps to piped text.
+|name|desc|
+|---|---|
+|[`cmd/ensure`](cmd/ensure)|Check hashes inside Unix pipes|
+|[`cmd/rt2`](cmd/rt2)|2D raytracer|
+|[`cmd/stamp`](cmd/stamp)|Add timestamps to piped data|
 
-```text
-Usage:
-    ... | stamp [-f FORMAT] [-b]
+## Libraries
 
-Options:
-    -b          Place the timestamp in brackets.
-    -f FORMAT   Choose a timestamp format (optional; default "medium").
-    -h          Show this help message.
-
-Formats:
-    small       1:00pm
-    medium      13:00:00.000
-    large       2020-11-25T13:00:00.000000000-08:00
-    unix        1606329242
-
-Example:
-    $ tail -f important.log | stamp -f small -b
-    [3:26am] An event.
-    [3:35am] Another event, sometime later.
-```
+|name|desc|
+|---|---|
+|[`ensure`](ensure)|Check hashes during data copies|
+|[`cross`](cross)|Cross product benchmarks|
+|[`rt2`](rt2)|2D raytracer|
+|[`xss`](xss)|Trigger XSS via Go documentation|
