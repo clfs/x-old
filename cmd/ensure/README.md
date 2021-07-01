@@ -57,9 +57,9 @@ Required) status codes can still cause `curl` to print to standard ouput:
 ```
 
 I haven't validated this assumption, but maybe an network-level attacker
-could serve malicious content via a HTTP 407 response, which would get
-executed by `sh`. My hunch is that I'm wrong, but `ensure` would at least
-prevent that outright:
+could serve malicious content via an HTTP 407 response, which would then
+be executed by `sh`. I'm probably wrong, but on the other hand `ensure`
+would at least prevent that:
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
