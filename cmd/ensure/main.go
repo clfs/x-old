@@ -20,6 +20,7 @@ import (
 
 func usage() {
 	fmt.Fprintf(os.Stderr, "usage:\n")
+	fmt.Fprintf(os.Stderr, "\tensure -help\n")
 	fmt.Fprintf(os.Stderr, "\tensure -list\n")
 	fmt.Fprintf(os.Stderr, "\t... | ensure -alg crc32 -sum 2747fc56 | ...\n")
 	os.Exit(1)
@@ -48,7 +49,7 @@ func main() {
 	}
 
 	if *sumFlag == "" {
-		log.Fatal("no sum provided")
+		flag.Usage()
 	}
 
 	var h hash.Hash

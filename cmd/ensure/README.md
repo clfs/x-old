@@ -1,72 +1,68 @@
 # ensure
 
-Check hashes with Unix pipes.
+Check piped data for the correct hash.
 
-## Disclaimer
-This tool provides **no** additional security - it only prevents accidental
-data modification. If you need to prevent *malicious* data modification, you
-should use a public-key signature system.
+This tool doesn't provide strong security. If you really need to
+prevent attacks on data integrity, you should rely on signatures
+rather than known hashes.
 
 ## Installation
-```
-go get github.com/clfs/ensure
+
+```text
+go install github.com/clfs/x/ensure@latest
 ```
 
 ## Usage
-```
-$ ensure
-Usage:
-	$ ... | ensure md5 1a79a4d60de6718e8e5b326e338ae533 | ...
-	Check the hash, then pass standard input to standard output.
-Options:
-	-list	List all supported algorithms.
-	-help	Print this help message.
-	-quiet	Suppress error messages.
+
+```text
+$ ensure -help
+usage:
+        ensure -help
+        ensure -list
+        ... | ensure -alg crc32 -sum 2747fc56 | ...
 ```
 
 ## Inspiration
-I thought of this while installing Rust. As of now, the recommended `rustup`
-[installation] method looks like this:
-```
-curl https://sh.rustup.rs -sSf | sh
+
+This is Rust's current [`rustup`](https://rustup.rs/) install command:
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
 The `curl` flags are:
-```
--s, --silent        Silent mode (don't output anything)
--S, --show-error    Show error. With -s, make curl show errors when they occur
--f, --fail          Fail silently (no output at all) on HTTP errors (H)
+
+```text
+-s, --silent        Silent mode
+-S, --show-error    Show error even when -s is used
+-f, --fail          Fail silently (no output at all) on HTTP errors
 ```
 
-If you check `man curl` though, you'll see that the `-f` flag isn't exactly
-fail-safe. At minimum, the 401 (Unauthorized) and 407 (Proxy Authentication
-Required) HTML response codes still cause `curl` to print to standard ouput.
-```
+If you check `man curl` though, you'll see that the `-f` flag doesn't
+always work. HTTP 401 (Unauthorized) and HTTP 407 (Proxy Authentication
+Required) status codes can still cause `curl` to print to standard ouput:
+
+```text
 -f, --fail
-       (HTTP)  Fail  silently (no output at all) on server errors. This
-       is mostly done to better enable scripts etc to better deal  with
-       failed  attempts.  In  normal cases when an HTTP server fails to
-       deliver a document, it  returns  an  HTML  document  stating  so
-       (which  often  also describes why and more). This flag will pre‐
+       (HTTP) Fail silently (no output at all) on server  errors.  This
+       is  mostly done to better enable scripts etc to better deal with
+       failed attempts. In normal cases when an HTTP  server  fails  to
+       deliver  a  document,  it  returns  an  HTML document stating so
+       (which often also describes why and more). This flag  will  pre-
        vent curl from outputting that and return error 22.
 
-       This method is not fail-safe and there are occasions where  non-
-       successful  response  codes  will  slip through, especially when
+       This  method is not fail-safe and there are occasions where non-
+       successful response codes will  slip  through,  especially  when
        authentication is involved (response codes 401 and 407).
 ```
 
-Instead, you can strengthen the `-f` flag by using `ensure` in tandem. Here's
-what that might look like (with the hash truncated for clarity):
+I haven't validated this assumption, but maybe an network-level attacker
+could serve malicious content via a HTTP 407 response, which would get
+executed by `sh`. My hunch is that I'm wrong, but `ensure` would at least
+prevent that outright:
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+  | ensure -alg crc32 -sum a6026086 \
+  | sh
 ```
-curl https://sh.rustup.rs -sSf | ensure sha256 9bbf4987[...] | sh
-```
-
-This isn't a great solution, to be fair - I'd definitely prefer the `rustup`
-team use signing keys for their installation script. The [RVM] installer is a
-useful example, even if it uses outdated GPG tooling.
-
-## License
-MIT; check the LICENSE file.
-
-[installation]: https://github.com/rust-lang/rustup.rs/#other-installation-methods
-[RVM]: https://rvm.io/rvm/install
