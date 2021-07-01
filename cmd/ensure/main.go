@@ -1,3 +1,4 @@
+// Package ensure checks piped data for the correct hash.
 package main
 
 import (
@@ -25,7 +26,7 @@ func usage() {
 }
 
 func list() {
-	fmt.Printf("supported algorithms:\n")
+	fmt.Printf("supported algorithms (-alg):\n")
 	fmt.Printf("\tcrc32, crc32c, md5, sha1, sha256, sha512\n")
 	os.Exit(0)
 }
