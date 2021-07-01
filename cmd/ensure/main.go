@@ -1,38 +1,53 @@
 package main
 
 import (
-	"crypto/md5"  //nolint:gosec // Third-party digest choice is beyond my control.
-	"crypto/sha1" //nolint:gosec // Third-party digest choice is beyond my control.
+	"bufio"
+	"bytes"
+	"crypto/md5"  //nolint:gosec
+	"crypto/sha1" //nolint:gosec
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/hex"
 	"flag"
+	"fmt"
 	"hash"
 	"hash/crc32"
+	"io"
 	"log"
 	"os"
-
-	"github.com/clfs/x/ensure"
 )
+
+func usage() {
+	fmt.Fprintf(os.Stderr, "usage:\n")
+	fmt.Fprintf(os.Stderr, "\tensure -list\n")
+	fmt.Fprintf(os.Stderr, "\t... | ensure -alg crc32 -sum 2747fc56 | ...\n")
+	os.Exit(1)
+}
+
+func list() {
+	fmt.Printf("supported algorithms:\n")
+	fmt.Printf("\tcrc32, crc32c, md5, sha1, sha256, sha512\n")
+	os.Exit(0)
+}
 
 func main() {
 	log.SetFlags(0)
 
 	var (
-		listFlag = flag.Bool("list", false, "list supported algorithms")
-		algFlag  = flag.String("alg", "", "algorithm to check with")
-		sumFlag  = flag.String("sum", "", "required sum in hex")
+		listFlag = flag.Bool("list", false, "")
+		algFlag  = flag.String("alg", "", "")
+		sumFlag  = flag.String("sum", "", "")
 	)
 
+	flag.Usage = usage
+	flag.Parse()
+
 	if *listFlag {
-		log.Printf("supported algorithms:\n\tcrc32, crc32c, md5, sha1, sha256, sha512")
-		return
+		list()
 	}
 
-	expected, err := hex.DecodeString(*sumFlag)
-	if err != nil {
-		log.Fatalf("invalid sum: %v", err)
-		return
+	if *sumFlag == "" {
+		log.Fatal("no sum provided")
 	}
 
 	var h hash.Hash
@@ -43,20 +58,40 @@ func main() {
 	case "crc32c":
 		h = crc32.New(crc32.MakeTable(crc32.Castagnoli))
 	case "md5":
-		h = md5.New() //nolint:gosec // Third-party digest choice is beyond my control.
+		h = md5.New() //nolint:gosec
 	case "sha1":
-		h = sha1.New() //nolint:gosec // Third-party digest choice is beyond my control.
+		h = sha1.New() //nolint:gosec
 	case "sha256":
 		h = sha256.New()
 	case "sha512":
 		h = sha512.New()
 	default:
 		flag.Usage()
-		return
 	}
 
-	c := ensure.NewCopier(h)
-	if _, err := c.Copy(os.Stdout, os.Stdin, expected); err != nil {
-		log.Fatalf("error: %v", err)
+	expected, err := hex.DecodeString(*sumFlag)
+	if err != nil {
+		log.Fatalf("invalid sum: %v", err)
 	}
+
+	var (
+		r = bufio.NewReader(os.Stdin)
+		w = bufio.NewWriter(os.Stdout)
+		b = new(bytes.Buffer)
+		t = io.TeeReader(r, b)
+	)
+
+	if _, err := io.Copy(h, t); err != nil {
+		log.Fatal("failed to hash stdin")
+	}
+
+	if got := h.Sum(nil); !bytes.Equal(got, expected) {
+		log.Fatalf("mismatched sum: got %x", got)
+	}
+
+	if _, err := b.WriteTo(w); err != nil {
+		log.Fatal("failed to write to stdout")
+	}
+
+	w.Flush()
 }
